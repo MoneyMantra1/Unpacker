@@ -1,0 +1,31 @@
+modLoader = "javafml"
+loaderVersion = "[1,)"
+license = "All Rights Reserved"
+
+[[mods]]
+modId = "unpacker"
+version = "1.0.0"
+displayName = "Unpacker"
+authors = "MoneyMantra"
+description = '''Adds an Unpacker block that unloads Traveler's Backpacks, shulker boxes, and bundles through side-specific hopper automation.'''
+
+[[dependencies.unpacker]]
+modId = "neoforge"
+type = "required"
+versionRange = "[21.1.0,)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.unpacker]]
+modId = "minecraft"
+type = "required"
+versionRange = "[1.21.1,1.22)"
+ordering = "NONE"
+side = "BOTH"
+
+[[dependencies.unpacker]]
+modId = "travelersbackpack"
+type = "required"
+versionRange = "[0,)"
+ordering = "AFTER"
+side = "BOTH"
