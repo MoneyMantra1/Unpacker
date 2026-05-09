@@ -14,21 +14,21 @@ import net.minecraft.world.item.ItemStack;
 public class UnpackerScreen extends AbstractContainerScreen<UnpackerMenu> {
     private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(Unpacker.MOD_ID, "textures/gui/unpacker.png");
 
-    private static final int TEXTURE_WIDTH = 320;
-    private static final int TEXTURE_HEIGHT = 250;
+    private static final int TEXTURE_WIDTH = 384;
+    private static final int TEXTURE_HEIGHT = 256;
 
-    private static final int STATUS_TEXT_X = 116;
-    private static final int STATUS_TEXT_Y = 72;
-    private static final int STATUS_TEXT_WIDTH = 118;
+    private static final int STATUS_TEXT_X = 137;
+    private static final int STATUS_TEXT_Y = 84;
+    private static final int STATUS_TEXT_WIDTH = 132;
     private static final int STATUS_PRIMARY_Y = STATUS_TEXT_Y + 10;
     private static final int STATUS_SECONDARY_Y = STATUS_TEXT_Y + 20;
 
-    private static final int PROGRESS_BAR_X = 116;
-    private static final int PROGRESS_BAR_Y = 98;
-    private static final int PROGRESS_BAR_WIDTH = 99;
-    private static final int PROGRESS_BAR_HEIGHT = 6;
-    private static final int PROGRESS_PERCENT_X = PROGRESS_BAR_X + PROGRESS_BAR_WIDTH + 8;
-    private static final int PROGRESS_PERCENT_Y = PROGRESS_BAR_Y - 1;
+    private static final int PROGRESS_BAR_X = 137;
+    private static final int PROGRESS_BAR_Y = 115;
+    private static final int PROGRESS_BAR_WIDTH = 104;
+    private static final int PROGRESS_BAR_HEIGHT = 5;
+    private static final int PROGRESS_PERCENT_X = PROGRESS_BAR_X + PROGRESS_BAR_WIDTH + 7;
+    private static final int PROGRESS_PERCENT_Y = PROGRESS_BAR_Y - 2;
 
     private static final int COLOR_TITLE = 0xFFE7E2D4;
     private static final int COLOR_LABEL = 0xFFD9D2BE;
@@ -37,7 +37,6 @@ public class UnpackerScreen extends AbstractContainerScreen<UnpackerMenu> {
     private static final int COLOR_SECONDARY = 0xFFB6BEC8;
     private static final int COLOR_MUTED = 0xFF69737F;
     private static final int COLOR_ORANGE = 0xFFFFA334;
-    private static final int COLOR_ORANGE_DIM = 0xFFC98531;
     private static final int COLOR_CYAN = 0xFF54DDEB;
     private static final int COLOR_WARNING = 0xFFFFC36B;
     private static final int COLOR_BLOCKED = 0xFFFF967A;
@@ -68,21 +67,21 @@ public class UnpackerScreen extends AbstractContainerScreen<UnpackerMenu> {
     private void renderStaticLabels(GuiGraphics guiGraphics) {
         drawCenteredText(guiGraphics, "UNPACKER", this.imageWidth / 2, 5, COLOR_TITLE);
 
-        drawCenteredText(guiGraphics, "INPUT", 32, 41, COLOR_LABEL);
-        drawCenteredText(guiGraphics, "TOP SIDE", 32, 51, COLOR_LABEL_DIM);
-        drawUpArrow(guiGraphics, 32, 28, COLOR_LABEL);
+        drawCenteredText(guiGraphics, "INPUT", 36, 44, COLOR_LABEL);
+        drawCenteredText(guiGraphics, "TOP SIDE", 36, 54, COLOR_LABEL_DIM);
+        drawUpArrow(guiGraphics, 36, 29, COLOR_LABEL);
 
-        drawCenteredText(guiGraphics, "EXTRACT", 32, 112, COLOR_LABEL);
-        drawCenteredText(guiGraphics, "BOTTOM", 32, 122, COLOR_LABEL_DIM);
-        drawCenteredText(guiGraphics, "SIDE", 32, 132, COLOR_LABEL_DIM);
-        drawDownArrow(guiGraphics, 32, 142, COLOR_LABEL);
+        drawCenteredText(guiGraphics, "EXTRACT", 36, 107, COLOR_LABEL);
+        drawCenteredText(guiGraphics, "BOTTOM", 36, 117, COLOR_LABEL_DIM);
+        drawCenteredText(guiGraphics, "SIDE", 36, 127, COLOR_LABEL_DIM);
+        drawDownArrow(guiGraphics, 36, 140, COLOR_LABEL);
 
-        drawCenteredText(guiGraphics, "OUTPUT", 287, 73, COLOR_LABEL);
-        drawCenteredText(guiGraphics, "FRONT SIDE", 287, 107, COLOR_LABEL_DIM);
+        drawCenteredText(guiGraphics, "OUTPUT", 328, 82, COLOR_LABEL);
+        drawCenteredText(guiGraphics, "FRONT SIDE", 328, 113, COLOR_LABEL_DIM);
 
-        guiGraphics.drawString(this.font, "INPUT", 79, 12, COLOR_LABEL, false);
-        guiGraphics.drawString(this.font, "OUTPUT", 79, 111, COLOR_LABEL, false);
-        guiGraphics.drawString(this.font, "INVENTORY", 79, 160, COLOR_LABEL, false);
+        guiGraphics.drawString(this.font, "INPUT", 88, 13, COLOR_LABEL, false);
+        guiGraphics.drawString(this.font, "OUTPUT", 88, 118, COLOR_LABEL, false);
+        guiGraphics.drawString(this.font, "INVENTORY", 88, 168, COLOR_LABEL, false);
     }
 
     private void renderStatusPanel(GuiGraphics guiGraphics) {
@@ -152,10 +151,10 @@ public class UnpackerScreen extends AbstractContainerScreen<UnpackerMenu> {
 
         return switch(status) {
             case UnpackerBlockEntity.STATUS_WORKING -> activeSlot >= 0
-                    ? "Slot " + (activeSlot + 1) + "/18 • " + remaining + " items left"
+                    ? "Slot " + (activeSlot + 1) + "/18 - " + remaining + " left"
                     : remaining + " items remaining";
             case UnpackerBlockEntity.STATUS_WAITING_FOR_HOPPER -> activeSlot >= 0
-                    ? "Slot " + (activeSlot + 1) + "/18 • hopper blocked"
+                    ? "Slot " + (activeSlot + 1) + "/18 - hopper blocked"
                     : "Check bottom hopper/chest";
             case UnpackerBlockEntity.STATUS_OUTPUT_FULL -> "Clear bottom output space";
             case UnpackerBlockEntity.STATUS_FRONT_OUTPUT_BLOCKED -> "Clear empty-container output";
