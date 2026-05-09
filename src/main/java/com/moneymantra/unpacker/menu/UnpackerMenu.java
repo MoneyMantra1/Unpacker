@@ -85,12 +85,12 @@ public class UnpackerMenu extends AbstractContainerMenu {
 
         for(int row = 0; row < 3; row++) {
             for(int col = 0; col < 9; col++) {
-                this.addSlot(new Slot(playerInventory, col + row * 9 + 9, startX + col * 18, 162 + row * 18));
+                this.addSlot(new Slot(playerInventory, col + row * 9 + 9, startX + col * 18, 164 + row * 18));
             }
         }
 
         for(int col = 0; col < 9; col++) {
-            this.addSlot(new Slot(playerInventory, col, startX + col * 18, 218));
+            this.addSlot(new Slot(playerInventory, col, startX + col * 18, 220));
         }
     }
 

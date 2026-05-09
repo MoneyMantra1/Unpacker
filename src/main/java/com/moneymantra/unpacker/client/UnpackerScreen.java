@@ -44,7 +44,14 @@ public class UnpackerScreen extends AbstractContainerScreen<UnpackerMenu> {
 
     @Override
     protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
+        drawTitle(guiGraphics);
         drawProgressBar(guiGraphics);
+    }
+
+    private void drawTitle(GuiGraphics guiGraphics) {
+        String text = this.title.getString();
+        int x = (this.imageWidth - this.font.width(text)) / 2;
+        guiGraphics.drawString(this.font, text, x, 10, 0xFFECEFF4, false);
     }
 
     private void drawProgressBar(GuiGraphics guiGraphics) {
