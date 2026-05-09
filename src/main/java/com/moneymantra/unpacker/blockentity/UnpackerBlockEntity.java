@@ -28,10 +28,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class UnpackerBlockEntity extends BlockEntity implements MenuProvider {
-    public static final int INPUT_SLOTS = 18;
-    public static final int OUTPUT_SLOTS = 18;
-    public static final int TOTAL_SLOTS = INPUT_SLOTS + OUTPUT_SLOTS;
-    public static final int OUTPUT_START = INPUT_SLOTS;
+    public static final int INPUT_SLOTS = 1;
+    public static final int ITEM_OUTPUT_SLOTS = 18;
+    public static final int OUTPUT_SLOTS = 1;
+    public static final int INPUT_SLOT = 0;
+    public static final int ITEM_OUTPUT_START = INPUT_SLOTS;
+    public static final int OUTPUT_START = ITEM_OUTPUT_START + ITEM_OUTPUT_SLOTS;
+    public static final int TOTAL_SLOTS = INPUT_SLOTS + ITEM_OUTPUT_SLOTS + OUTPUT_SLOTS;
 
     public static final int STATUS_IDLE = 0;
     public static final int STATUS_WORKING = 1;
@@ -64,12 +67,15 @@ public class UnpackerBlockEntity extends BlockEntity implements MenuProvider {
 
         @Override
         public int getSlotLimit(int slot) {
-            return 1;
+            if(slot == INPUT_SLOT || slot >= OUTPUT_START) {
+                return 1;
+            }
+            return 64;
         }
 
         @Override
         public boolean isItemValid(int slot, @NotNull ItemStack stack) {
-            return slot < INPUT_SLOTS && ContainerItemUtil.isSupportedContainer(stack);
+            return slot == INPUT_SLOT && ContainerItemUtil.isSupportedContainer(stack);
         }
     };
 
@@ -87,6 +93,9 @@ public class UnpackerBlockEntity extends BlockEntity implements MenuProvider {
         if(level.getGameTime() % TOP_INPUT_PULL_INTERVAL_TICKS == 0L) {
             blockEntity.pullInputFromTopInventory();
         }
+
+        blockEntity.processUnpackingCycle();
+        blockEntity.moveCompletedInputsToOutput();
 
         if(level.getGameTime() % FRONT_OUTPUT_INTERVAL_TICKS == 0L) {
             blockEntity.pushOutputToFront();
@@ -250,6 +259,113 @@ public class UnpackerBlockEntity extends BlockEntity implements MenuProvider {
         }
     }
 
+    private void processUnpackingCycle() {
+        ActiveInput active = findActiveInput();
+        if(active == null) {
+            return;
+        }
+
+        if(ContainerItemUtil.isContainerEmpty(active.stack())) {
+            moveCompletedInputsToOutput();
+            return;
+        }
+
+        int contentSlots = ContainerItemUtil.getContentSlots(active.stack());
+        for(int contentSlot = 0; contentSlot < contentSlots; contentSlot++) {
+            if(moveContentToItemOutputs(active, contentSlot)) {
+                moveCompletedInputsToOutput();
+                updateProgressTracking();
+                return;
+            }
+        }
+    }
+
+    private boolean moveContentToItemOutputs(ActiveInput active, int contentSlot) {
+        ItemStack available = ContainerItemUtil.getContentStack(active.stack(), contentSlot);
+        if(available.isEmpty()) {
+            return false;
+        }
+
+        ItemStack simulatedRemainder = insertIntoItemOutputs(available.copy(), true);
+        int toExtract = available.getCount() - simulatedRemainder.getCount();
+        if(toExtract <= 0) {
+            return false;
+        }
+
+        ItemStack extracted = ContainerItemUtil.extractContent(active.stack(), contentSlot, toExtract, false);
+        if(extracted.isEmpty()) {
+            return false;
+        }
+
+        ItemStack remainder = insertIntoItemOutputs(extracted, false);
+        if(!remainder.isEmpty()) {
+            // This should be impossible because the insertion was simulated first, but do not delete items if state changed unexpectedly.
+            ItemHandlerHelper.insertItemStacked(items, remainder, false);
+        }
+
+        items.setStackInSlot(active.slot(), active.stack());
+        lastContentExtractionGameTime = level == null ? 0L : level.getGameTime();
+        changed();
+        return true;
+    }
+
+    private ItemStack insertIntoItemOutputs(ItemStack stack, boolean simulate) {
+        ItemStack remainder = stack.copy();
+
+        for(int slot = ITEM_OUTPUT_START; slot < OUTPUT_START && !remainder.isEmpty(); slot++) {
+            ItemStack stored = items.getStackInSlot(slot);
+            if(stored.isEmpty() || !ItemStack.isSameItemSameComponents(stored, remainder)) {
+                continue;
+            }
+
+            int limit = Math.min(items.getSlotLimit(slot), stored.getMaxStackSize());
+            int toMove = Math.min(remainder.getCount(), limit - stored.getCount());
+            if(toMove <= 0) {
+                continue;
+            }
+
+            if(!simulate) {
+                stored.grow(toMove);
+                items.setStackInSlot(slot, stored);
+            }
+            remainder.shrink(toMove);
+        }
+
+        for(int slot = ITEM_OUTPUT_START; slot < OUTPUT_START && !remainder.isEmpty(); slot++) {
+            ItemStack stored = items.getStackInSlot(slot);
+            if(!stored.isEmpty()) {
+                continue;
+            }
+
+            int toMove = Math.min(remainder.getCount(), Math.min(items.getSlotLimit(slot), remainder.getMaxStackSize()));
+            if(toMove <= 0) {
+                continue;
+            }
+
+            if(!simulate) {
+                items.setStackInSlot(slot, remainder.copyWithCount(toMove));
+            }
+            remainder.shrink(toMove);
+        }
+
+        return remainder;
+    }
+
+    private boolean canMoveAnyContentToItemOutputs(ActiveInput active) {
+        int contentSlots = ContainerItemUtil.getContentSlots(active.stack());
+        for(int contentSlot = 0; contentSlot < contentSlots; contentSlot++) {
+            ItemStack available = ContainerItemUtil.getContentStack(active.stack(), contentSlot);
+            if(available.isEmpty()) {
+                continue;
+            }
+
+            if(insertIntoItemOutputs(available.copy(), true).getCount() < available.getCount()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private boolean hasOutputItems() {
         for(int slot = OUTPUT_START; slot < TOTAL_SLOTS; slot++) {
             if(!items.getStackInSlot(slot).isEmpty()) {
@@ -345,6 +461,11 @@ public class UnpackerBlockEntity extends BlockEntity implements MenuProvider {
 
         if(remaining <= 0) {
             trackedStatus = findFirstEmptyOutputSlot() < 0 ? STATUS_OUTPUT_FULL : STATUS_WORKING;
+            return;
+        }
+
+        if(!canMoveAnyContentToItemOutputs(active)) {
+            trackedStatus = STATUS_WAITING_FOR_HOPPER;
             return;
         }
 
@@ -479,14 +600,15 @@ public class UnpackerBlockEntity extends BlockEntity implements MenuProvider {
     private class BottomContentHandler implements IItemHandler {
         @Override
         public int getSlots() {
-            ActiveInput active = findActiveInput();
-            return active == null ? 0 : ContainerItemUtil.getContentSlots(active.stack());
+            return ITEM_OUTPUT_SLOTS;
         }
 
         @Override
         public @NotNull ItemStack getStackInSlot(int slot) {
-            ActiveInput active = findActiveInput();
-            return active == null ? ItemStack.EMPTY : ContainerItemUtil.getContentStack(active.stack(), slot);
+            if(slot < 0 || slot >= ITEM_OUTPUT_SLOTS) {
+                return ItemStack.EMPTY;
+            }
+            return items.getStackInSlot(ITEM_OUTPUT_START + slot);
         }
 
         @Override
@@ -496,17 +618,13 @@ public class UnpackerBlockEntity extends BlockEntity implements MenuProvider {
 
         @Override
         public @NotNull ItemStack extractItem(int slot, int amount, boolean simulate) {
-            ActiveInput active = findActiveInput();
-            if(active == null) {
+            if(slot < 0 || slot >= ITEM_OUTPUT_SLOTS) {
                 return ItemStack.EMPTY;
             }
 
-            ItemStack extracted = ContainerItemUtil.extractContent(active.stack(), slot, amount, simulate);
+            ItemStack extracted = items.extractItem(ITEM_OUTPUT_START + slot, amount, simulate);
             if(!simulate && !extracted.isEmpty()) {
-                items.setStackInSlot(active.slot(), active.stack());
-                lastContentExtractionGameTime = level == null ? 0L : level.getGameTime();
                 changed();
-                moveCompletedInputsToOutput();
                 updateProgressTracking();
             }
             return extracted;

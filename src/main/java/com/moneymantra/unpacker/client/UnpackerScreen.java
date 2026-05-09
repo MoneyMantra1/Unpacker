@@ -15,9 +15,9 @@ public class UnpackerScreen extends AbstractContainerScreen<UnpackerMenu> {
     private static final int TEXTURE_WIDTH = 220;
     private static final int TEXTURE_HEIGHT = 248;
 
-    private static final int PROGRESS_BAR_X = 30;
-    private static final int PROGRESS_BAR_Y = 79;
-    private static final int PROGRESS_BAR_WIDTH = 160;
+    private static final int PROGRESS_BAR_X = 58;
+    private static final int PROGRESS_BAR_Y = 57;
+    private static final int PROGRESS_BAR_WIDTH = 104;
     private static final int PROGRESS_BAR_HEIGHT = 8;
 
     private static final int COLOR_PROGRESS_BORDER = 0xFF383838;

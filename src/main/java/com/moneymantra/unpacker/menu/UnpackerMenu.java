@@ -65,19 +65,16 @@ public class UnpackerMenu extends AbstractContainerMenu {
     private void addMachineSlots() {
         int startX = 29;
 
-        for(int row = 0; row < 2; row++) {
-            for(int col = 0; col < 9; col++) {
-                int slot = row * 9 + col;
-                this.addSlot(new SlotItemHandler(blockEntity.getInternalItems(), slot, startX + col * 18, 22 + row * 18));
-            }
-        }
+        this.addSlot(new SlotItemHandler(blockEntity.getInternalItems(), UnpackerBlockEntity.INPUT_SLOT, 29, 52));
 
         for(int row = 0; row < 2; row++) {
             for(int col = 0; col < 9; col++) {
-                int slot = UnpackerBlockEntity.OUTPUT_START + row * 9 + col;
-                this.addSlot(new LockedSlotItemHandler(blockEntity.getInternalItems(), slot, startX + col * 18, 115 + row * 18));
+                int slot = UnpackerBlockEntity.ITEM_OUTPUT_START + row * 9 + col;
+                this.addSlot(new LockedSlotItemHandler(blockEntity.getInternalItems(), slot, startX + col * 18, 114 + row * 18));
             }
         }
+
+        this.addSlot(new LockedSlotItemHandler(blockEntity.getInternalItems(), UnpackerBlockEntity.OUTPUT_START, 175, 52));
     }
 
     private void addPlayerInventorySlots(Inventory playerInventory) {
