@@ -41,6 +41,7 @@ public class UnpackerBlockEntity extends BlockEntity implements MenuProvider {
 
     private static final String ITEMS_TAG = "Items";
     private static final int FRONT_OUTPUT_INTERVAL_TICKS = 8;
+    private static final int TOP_INPUT_PULL_INTERVAL_TICKS = 8;
     private static final int WAITING_FOR_HOPPER_TICKS = 40;
 
     private int trackedInputSlot = -1;
@@ -82,6 +83,10 @@ public class UnpackerBlockEntity extends BlockEntity implements MenuProvider {
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, UnpackerBlockEntity blockEntity) {
         blockEntity.moveCompletedInputsToOutput();
+
+        if(level.getGameTime() % TOP_INPUT_PULL_INTERVAL_TICKS == 0L) {
+            blockEntity.pullInputFromTopInventory();
+        }
 
         if(level.getGameTime() % FRONT_OUTPUT_INTERVAL_TICKS == 0L) {
             blockEntity.pushOutputToFront();
@@ -194,6 +199,55 @@ public class UnpackerBlockEntity extends BlockEntity implements MenuProvider {
             }
         }
         return -1;
+    }
+
+    private int findFirstEmptyInputSlot() {
+        for(int slot = 0; slot < INPUT_SLOTS; slot++) {
+            if(items.getStackInSlot(slot).isEmpty()) {
+                return slot;
+            }
+        }
+        return -1;
+    }
+
+    private void pullInputFromTopInventory() {
+        if(level == null || level.isClientSide || findFirstEmptyInputSlot() < 0) {
+            return;
+        }
+
+        IItemHandler source = level.getCapability(Capabilities.ItemHandler.BLOCK, worldPosition.above(), Direction.DOWN);
+        if(source == null) {
+            return;
+        }
+
+        for(int sourceSlot = 0; sourceSlot < source.getSlots(); sourceSlot++) {
+            ItemStack available = source.getStackInSlot(sourceSlot);
+            if(available.isEmpty() || !ContainerItemUtil.isSupportedContainer(available)) {
+                continue;
+            }
+
+            ItemStack simulatedExtract = source.extractItem(sourceSlot, 1, true);
+            if(simulatedExtract.isEmpty() || !ContainerItemUtil.isSupportedContainer(simulatedExtract)) {
+                continue;
+            }
+
+            int targetSlot = findFirstEmptyInputSlot();
+            if(targetSlot < 0 || !items.insertItem(targetSlot, simulatedExtract.copy(), true).isEmpty()) {
+                return;
+            }
+
+            ItemStack extracted = source.extractItem(sourceSlot, 1, false);
+            if(extracted.isEmpty()) {
+                return;
+            }
+
+            ItemStack remainder = items.insertItem(targetSlot, extracted, false);
+            if(!remainder.isEmpty()) {
+                ItemHandlerHelper.insertItemStacked(source, remainder, false);
+            }
+            changed();
+            return;
+        }
     }
 
     private boolean hasOutputItems() {

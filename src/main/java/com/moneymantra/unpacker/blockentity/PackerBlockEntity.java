@@ -17,7 +17,9 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.items.IItemHandler;
+import net.neoforged.neoforge.items.ItemHandlerHelper;
 import net.neoforged.neoforge.items.ItemStackHandler;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -42,6 +44,8 @@ public class PackerBlockEntity extends BlockEntity implements MenuProvider {
 
     private static final String ITEMS_TAG = "Items";
     private static final int PACK_INTERVAL_TICKS = 2;
+    private static final int DIRECT_ITEM_PULL_INTERVAL_TICKS = 8;
+    private static final int DIRECT_CONTAINER_PULL_INTERVAL_TICKS = 8;
 
     private int trackedContainerSlot = -1;
     private int trackedPackedItemCount = 0;
@@ -92,6 +96,10 @@ public class PackerBlockEntity extends BlockEntity implements MenuProvider {
     }
 
     public static void serverTick(Level level, BlockPos pos, BlockState state, PackerBlockEntity blockEntity) {
+        if(level.getGameTime() % DIRECT_CONTAINER_PULL_INTERVAL_TICKS == 0L) {
+            blockEntity.pullContainerFromFrontInventory();
+        }
+
         if(level.getGameTime() % PACK_INTERVAL_TICKS == 0L) {
             blockEntity.processPackingCycle();
         }
@@ -198,31 +206,20 @@ public class PackerBlockEntity extends BlockEntity implements MenuProvider {
             return;
         }
 
-        for(int inputSlot = 0; inputSlot < ITEM_INPUT_SLOTS; inputSlot++) {
-            ItemStack input = items.getStackInSlot(inputSlot);
-            if(input.isEmpty() || ContainerItemUtil.isSupportedContainer(input)) {
-                continue;
-            }
-
-            int inserted = ContainerItemUtil.insertContent(active.stack(), input, false);
-            if(inserted > 0) {
-                input.shrink(inserted);
-                if(input.isEmpty()) {
-                    items.setStackInSlot(inputSlot, ItemStack.EMPTY);
-                }
-                items.setStackInSlot(active.slot(), active.stack());
-                trackedStatus = STATUS_WORKING;
-                changed();
-
-                if(ContainerItemUtil.isContainerFull(active.stack())) {
-                    moveContainerToOutput(active);
-                }
-                return;
-            }
+        if(packFromInternalItemSlots(active)) {
+            return;
         }
 
-        trackedStatus = STATUS_NO_ITEM_FITS;
-        moveContainerToOutput(active);
+        if(level != null && level.getGameTime() % DIRECT_ITEM_PULL_INTERVAL_TICKS == 0L && packFromTopInventory(active)) {
+            return;
+        }
+
+        if(!canAnyInputItemFit(active.stack())) {
+            trackedStatus = STATUS_NO_ITEM_FITS;
+            moveContainerToOutput(active);
+        } else {
+            trackedStatus = STATUS_WORKING;
+        }
     }
 
     private boolean moveContainerToOutput(ActiveContainer active) {
@@ -250,7 +247,176 @@ public class PackerBlockEntity extends BlockEntity implements MenuProvider {
         return -1;
     }
 
+    private boolean packFromInternalItemSlots(ActiveContainer active) {
+        for(int inputSlot = 0; inputSlot < ITEM_INPUT_SLOTS; inputSlot++) {
+            ItemStack input = items.getStackInSlot(inputSlot);
+            if(input.isEmpty() || ContainerItemUtil.isSupportedContainer(input)) {
+                continue;
+            }
+
+            int inserted = ContainerItemUtil.insertContent(active.stack(), input, false);
+            if(inserted <= 0) {
+                continue;
+            }
+
+            input.shrink(inserted);
+            if(input.isEmpty()) {
+                items.setStackInSlot(inputSlot, ItemStack.EMPTY);
+            }
+            items.setStackInSlot(active.slot(), active.stack());
+            trackedStatus = STATUS_WORKING;
+            changed();
+
+            if(ContainerItemUtil.isContainerFull(active.stack())) {
+                moveContainerToOutput(active);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private boolean packFromTopInventory(ActiveContainer active) {
+        if(level == null || level.isClientSide) {
+            return false;
+        }
+
+        IItemHandler source = getTopSourceInventory();
+        if(source == null) {
+            return false;
+        }
+
+        for(int sourceSlot = 0; sourceSlot < source.getSlots(); sourceSlot++) {
+            ItemStack available = source.getStackInSlot(sourceSlot);
+            if(available.isEmpty() || ContainerItemUtil.isSupportedContainer(available)) {
+                continue;
+            }
+
+            int canInsert = ContainerItemUtil.insertContent(active.stack(), available, true);
+            if(canInsert <= 0) {
+                continue;
+            }
+
+            ItemStack simulatedExtract = source.extractItem(sourceSlot, canInsert, true);
+            if(simulatedExtract.isEmpty() || ContainerItemUtil.isSupportedContainer(simulatedExtract)) {
+                continue;
+            }
+
+            int insertableExtractedAmount = ContainerItemUtil.insertContent(active.stack(), simulatedExtract, true);
+            if(insertableExtractedAmount <= 0) {
+                continue;
+            }
+
+            ItemStack extracted = source.extractItem(sourceSlot, insertableExtractedAmount, false);
+            if(extracted.isEmpty()) {
+                continue;
+            }
+
+            int inserted = ContainerItemUtil.insertContent(active.stack(), extracted, false);
+            if(inserted <= 0) {
+                returnRemainderToSource(source, extracted);
+                continue;
+            }
+
+            if(inserted < extracted.getCount()) {
+                returnRemainderToSource(source, extracted.copyWithCount(extracted.getCount() - inserted));
+            }
+
+            items.setStackInSlot(active.slot(), active.stack());
+            trackedStatus = STATUS_WORKING;
+            changed();
+
+            if(ContainerItemUtil.isContainerFull(active.stack())) {
+                moveContainerToOutput(active);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private void pullContainerFromFrontInventory() {
+        if(level == null || level.isClientSide || findFirstEmptyContainerSlot() < 0) {
+            return;
+        }
+
+        Direction front = getFrontDirection();
+        IItemHandler source = level.getCapability(Capabilities.ItemHandler.BLOCK, worldPosition.relative(front), front.getOpposite());
+        if(source == null) {
+            return;
+        }
+
+        for(int sourceSlot = 0; sourceSlot < source.getSlots(); sourceSlot++) {
+            ItemStack available = source.getStackInSlot(sourceSlot);
+            if(available.isEmpty() || !ContainerItemUtil.isSupportedContainer(available)) {
+                continue;
+            }
+
+            ItemStack simulatedExtract = source.extractItem(sourceSlot, 1, true);
+            if(simulatedExtract.isEmpty() || !ContainerItemUtil.isSupportedContainer(simulatedExtract)) {
+                continue;
+            }
+
+            int targetSlot = findFirstEmptyContainerSlot();
+            if(targetSlot < 0 || !items.insertItem(targetSlot, simulatedExtract.copy(), true).isEmpty()) {
+                return;
+            }
+
+            ItemStack extracted = source.extractItem(sourceSlot, 1, false);
+            if(extracted.isEmpty()) {
+                return;
+            }
+
+            ItemStack remainder = items.insertItem(targetSlot, extracted, false);
+            if(!remainder.isEmpty()) {
+                returnRemainderToSource(source, remainder);
+            }
+            changed();
+            return;
+        }
+    }
+
+    private int findFirstEmptyContainerSlot() {
+        for(int slot = CONTAINER_START; slot < OUTPUT_START; slot++) {
+            if(items.getStackInSlot(slot).isEmpty()) {
+                return slot;
+            }
+        }
+        return -1;
+    }
+
+    @Nullable
+    private IItemHandler getTopSourceInventory() {
+        if(level == null || level.isClientSide) {
+            return null;
+        }
+        return level.getCapability(Capabilities.ItemHandler.BLOCK, worldPosition.above(), Direction.DOWN);
+    }
+
+    private void returnRemainderToSource(IItemHandler source, ItemStack remainder) {
+        if(!remainder.isEmpty()) {
+            ItemHandlerHelper.insertItemStacked(source, remainder, false);
+        }
+    }
+
     private boolean hasPackableInputItems() {
+        if(hasInternalPackableInputItems()) {
+            return true;
+        }
+
+        IItemHandler source = getTopSourceInventory();
+        if(source == null) {
+            return false;
+        }
+
+        for(int slot = 0; slot < source.getSlots(); slot++) {
+            ItemStack stack = source.getStackInSlot(slot);
+            if(!stack.isEmpty() && !ContainerItemUtil.isSupportedContainer(stack)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private boolean hasInternalPackableInputItems() {
         for(int slot = 0; slot < ITEM_INPUT_SLOTS; slot++) {
             ItemStack stack = items.getStackInSlot(slot);
             if(!stack.isEmpty() && !ContainerItemUtil.isSupportedContainer(stack)) {
@@ -290,6 +456,18 @@ public class PackerBlockEntity extends BlockEntity implements MenuProvider {
     private boolean canAnyInputItemFit(ItemStack container) {
         for(int slot = 0; slot < ITEM_INPUT_SLOTS; slot++) {
             ItemStack input = items.getStackInSlot(slot);
+            if(!input.isEmpty() && !ContainerItemUtil.isSupportedContainer(input) && ContainerItemUtil.canInsertContent(container, input)) {
+                return true;
+            }
+        }
+
+        IItemHandler source = getTopSourceInventory();
+        if(source == null) {
+            return false;
+        }
+
+        for(int slot = 0; slot < source.getSlots(); slot++) {
+            ItemStack input = source.getStackInSlot(slot);
             if(!input.isEmpty() && !ContainerItemUtil.isSupportedContainer(input) && ContainerItemUtil.canInsertContent(container, input)) {
                 return true;
             }
