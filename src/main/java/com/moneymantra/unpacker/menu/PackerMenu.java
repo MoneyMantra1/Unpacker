@@ -72,21 +72,8 @@ public class PackerMenu extends AbstractContainerMenu {
             }
         }
 
-        int containerStartX = 38;
-        for(int row = 0; row < 2; row++) {
-            for(int col = 0; col < 3; col++) {
-                int containerSlot = PackerBlockEntity.CONTAINER_START + row * 3 + col;
-                this.addSlot(new SlotItemHandler(blockEntity.getInternalItems(), containerSlot, containerStartX + col * 18, 115 + row * 18));
-            }
-        }
-
-        int outputStartX = 128;
-        for(int row = 0; row < 2; row++) {
-            for(int col = 0; col < 3; col++) {
-                int outputSlot = PackerBlockEntity.OUTPUT_START + row * 3 + col;
-                this.addSlot(new LockedSlotItemHandler(blockEntity.getInternalItems(), outputSlot, outputStartX + col * 18, 115 + row * 18));
-            }
-        }
+        this.addSlot(new SlotItemHandler(blockEntity.getInternalItems(), PackerBlockEntity.CONTAINER_START, 29, 97));
+        this.addSlot(new LockedSlotItemHandler(blockEntity.getInternalItems(), PackerBlockEntity.OUTPUT_START, 175, 97));
     }
 
     private void addPlayerInventorySlots(Inventory playerInventory) {

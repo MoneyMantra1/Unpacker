@@ -17,17 +17,17 @@ public class PackerScreen extends AbstractContainerScreen<PackerMenu> {
     private static final int TEXTURE_WIDTH = 220;
     private static final int TEXTURE_HEIGHT = 248;
 
-    private static final int PROGRESS_BAR_X = 30;
-    private static final int PROGRESS_BAR_Y = 91;
-    private static final int PROGRESS_BAR_WIDTH = 160;
+    private static final int PROGRESS_BAR_X = 58;
+    private static final int PROGRESS_BAR_Y = 102;
+    private static final int PROGRESS_BAR_WIDTH = 104;
     private static final int PROGRESS_BAR_HEIGHT = 8;
 
     private static final int COLOR_PROGRESS_BORDER = 0xFF383838;
     private static final int COLOR_PROGRESS_BACKGROUND = 0xFF445568;
     private static final int COLOR_PROGRESS_GRID = 0xFF5D6E82;
-    private static final int COLOR_PROGRESS_FILL = 0xFF4F9E5A;
-    private static final int COLOR_PROGRESS_HIGHLIGHT = 0xFF7FD789;
-    private static final int COLOR_PROGRESS_SHADOW = 0xFF2F6C38;
+    private static final int COLOR_PROGRESS_FILL = 0xFFD58522;
+    private static final int COLOR_PROGRESS_HIGHLIGHT = 0xFFF1B458;
+    private static final int COLOR_PROGRESS_SHADOW = 0xFF99501A;
 
     public PackerScreen(PackerMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
@@ -47,8 +47,6 @@ public class PackerScreen extends AbstractContainerScreen<PackerMenu> {
     @Override
     protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
         drawTitle(guiGraphics);
-        drawSectionLabels(guiGraphics);
-        drawStatusText(guiGraphics);
         drawProgressBar(guiGraphics);
     }
 
@@ -56,64 +54,6 @@ public class PackerScreen extends AbstractContainerScreen<PackerMenu> {
         String text = this.title.getString();
         int x = (this.imageWidth - this.font.width(text)) / 2;
         guiGraphics.drawString(this.font, text, x, 10, 0xFFECEFF4, false);
-    }
-
-    private void drawSectionLabels(GuiGraphics guiGraphics) {
-        guiGraphics.drawString(this.font, "Items", 29, 62, 0xFF7F8996, false);
-        guiGraphics.drawString(this.font, "Containers", 38, 105, 0xFF7F8996, false);
-        guiGraphics.drawString(this.font, "Packed Output", 126, 105, 0xFF7F8996, false);
-    }
-
-    private void drawStatusText(GuiGraphics guiGraphics) {
-        String primary = getPrimaryStatusText();
-        String secondary = getSecondaryStatusText();
-        int primaryColor = getPrimaryStatusColor();
-
-        guiGraphics.drawString(this.font, primary, 30, 70, primaryColor, false);
-        guiGraphics.drawString(this.font, secondary, 30, 80, 0xFFB9C0C8, false);
-
-        if(shouldRenderProgressBar()) {
-            String percent = Math.max(0, Math.min(100, this.menu.getFillPercent())) + "%";
-            guiGraphics.drawString(this.font, percent, 192 - this.font.width(percent), 90, 0xFFECEFF4, false);
-        }
-    }
-
-    private String getPrimaryStatusText() {
-        int status = this.menu.getStatus();
-        ItemStack activeStack = this.menu.getActiveContainerStack();
-
-        return switch(status) {
-            case PackerBlockEntity.STATUS_WORKING -> "Packing " + ContainerItemUtil.getKindDisplayName(activeStack);
-            case PackerBlockEntity.STATUS_WAITING_FOR_ITEMS -> "Waiting for items...";
-            case PackerBlockEntity.STATUS_WAITING_FOR_CONTAINER -> "Waiting for container...";
-            case PackerBlockEntity.STATUS_OUTPUT_FULL -> "Output full";
-            case PackerBlockEntity.STATUS_NO_ITEM_FITS -> "No input item fits";
-            default -> "Idle";
-        };
-    }
-
-    private String getSecondaryStatusText() {
-        int status = this.menu.getStatus();
-        int slot = this.menu.getActiveContainerSlot() - PackerBlockEntity.CONTAINER_START + 1;
-        int packed = this.menu.getPackedItemCount();
-
-        return switch(status) {
-            case PackerBlockEntity.STATUS_WORKING -> "Slot " + slot + "/6 • " + packed + " packed";
-            case PackerBlockEntity.STATUS_WAITING_FOR_ITEMS -> "Add loose items from the top";
-            case PackerBlockEntity.STATUS_WAITING_FOR_CONTAINER -> "Insert backpacks, shulkers, or bundles";
-            case PackerBlockEntity.STATUS_OUTPUT_FULL -> "Remove packed containers below";
-            case PackerBlockEntity.STATUS_NO_ITEM_FITS -> "Moving container to output";
-            default -> "Insert items and containers";
-        };
-    }
-
-    private int getPrimaryStatusColor() {
-        int status = this.menu.getStatus();
-        return switch(status) {
-            case PackerBlockEntity.STATUS_OUTPUT_FULL -> 0xFFFF8E7A;
-            case PackerBlockEntity.STATUS_WAITING_FOR_ITEMS, PackerBlockEntity.STATUS_WAITING_FOR_CONTAINER, PackerBlockEntity.STATUS_NO_ITEM_FITS -> 0xFFFFD28A;
-            default -> 0xFFECEFF4;
-        };
     }
 
     private void drawProgressBar(GuiGraphics guiGraphics) {

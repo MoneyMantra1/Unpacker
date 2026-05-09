@@ -29,8 +29,8 @@ import java.util.List;
 
 public class PackerBlockEntity extends BlockEntity implements MenuProvider {
     public static final int ITEM_INPUT_SLOTS = 18;
-    public static final int CONTAINER_INPUT_SLOTS = 6;
-    public static final int OUTPUT_SLOTS = 6;
+    public static final int CONTAINER_INPUT_SLOTS = 1;
+    public static final int OUTPUT_SLOTS = 1;
     public static final int CONTAINER_START = ITEM_INPUT_SLOTS;
     public static final int OUTPUT_START = ITEM_INPUT_SLOTS + CONTAINER_INPUT_SLOTS;
     public static final int TOTAL_SLOTS = ITEM_INPUT_SLOTS + CONTAINER_INPUT_SLOTS + OUTPUT_SLOTS;
