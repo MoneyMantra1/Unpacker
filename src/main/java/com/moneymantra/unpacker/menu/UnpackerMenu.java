@@ -75,7 +75,7 @@ public class UnpackerMenu extends AbstractContainerMenu {
         for(int row = 0; row < 2; row++) {
             for(int col = 0; col < 9; col++) {
                 int slot = UnpackerBlockEntity.OUTPUT_START + row * 9 + col;
-                this.addSlot(new LockedSlotItemHandler(blockEntity.getInternalItems(), slot, startX + col * 18, 121 + row * 18));
+                this.addSlot(new LockedSlotItemHandler(blockEntity.getInternalItems(), slot, startX + col * 18, 115 + row * 18));
             }
         }
     }
