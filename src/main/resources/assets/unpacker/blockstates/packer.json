@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "facing=north": { "model": "unpacker:block/packer" },
+    "facing=east": { "model": "unpacker:block/packer", "y": 90 },
+    "facing=south": { "model": "unpacker:block/packer", "y": 180 },
+    "facing=west": { "model": "unpacker:block/packer", "y": 270 }
+  }
+}

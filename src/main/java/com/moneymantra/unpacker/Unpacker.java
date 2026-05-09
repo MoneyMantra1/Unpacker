@@ -30,11 +30,17 @@ public class Unpacker {
                 ModBlockEntities.UNPACKER.get(),
                 (blockEntity, side) -> blockEntity.getItemHandler(side)
         );
+        event.registerBlockEntity(
+                Capabilities.ItemHandler.BLOCK,
+                ModBlockEntities.PACKER.get(),
+                (blockEntity, side) -> blockEntity.getItemHandler(side)
+        );
     }
 
     private void addCreativeTabContents(BuildCreativeModeTabContentsEvent event) {
         if(event.getTabKey() == CreativeModeTabs.FUNCTIONAL_BLOCKS) {
             event.accept(ModBlocks.UNPACKER_ITEM.get());
+            event.accept(ModBlocks.PACKER_ITEM.get());
         }
     }
 }

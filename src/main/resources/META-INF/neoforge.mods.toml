@@ -4,10 +4,10 @@ license = "All Rights Reserved"
 
 [[mods]]
 modId = "unpacker"
-version = "1.0.0"
+version = "1.1.0"
 displayName = "Unpacker"
 authors = "MoneyMantra"
-description = '''Adds an Unpacker block that unloads Traveler's Backpacks, shulker boxes, and bundles through side-specific hopper automation.'''
+description = '''Adds Unpacker and Packer blocks for side-specific automation with Traveler's Backpacks, shulker boxes, and bundles.'''
 
 [[dependencies.unpacker]]
 modId = "neoforge"

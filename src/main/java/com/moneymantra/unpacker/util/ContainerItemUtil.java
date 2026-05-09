@@ -114,6 +114,51 @@ public final class ContainerItemUtil {
         };
     }
 
+
+    public static boolean isContainerFull(ItemStack stack) {
+        return switch(getKind(stack)) {
+            case TRAVELERS_BACKPACK -> isTravelerBackpackStorageFull(stack);
+            case SHULKER_BOX -> isShulkerFull(stack);
+            case BUNDLE -> isBundleFull(stack);
+            case UNSUPPORTED -> true;
+        };
+    }
+
+    public static float getFillProgress(ItemStack stack) {
+        return switch(getKind(stack)) {
+            case TRAVELERS_BACKPACK -> getTravelerBackpackFillProgress(stack);
+            case SHULKER_BOX -> getShulkerFillProgress(stack);
+            case BUNDLE -> getBundleFillProgress(stack);
+            case UNSUPPORTED -> 0.0F;
+        };
+    }
+
+    public static boolean canInsertContent(ItemStack container, ItemStack input) {
+        return insertContent(container, input, true) > 0;
+    }
+
+    public static int insertContent(ItemStack container, ItemStack input, boolean simulate) {
+        if(container.isEmpty() || input.isEmpty() || isSupportedContainer(input)) {
+            return 0;
+        }
+
+        return switch(getKind(container)) {
+            case TRAVELERS_BACKPACK -> insertTravelerBackpackContent(container, input, simulate);
+            case SHULKER_BOX -> insertShulkerContent(container, input, simulate);
+            case BUNDLE -> insertBundleContent(container, input, simulate);
+            case UNSUPPORTED -> 0;
+        };
+    }
+
+    public static String getKindDisplayName(ItemStack stack) {
+        return switch(getKind(stack)) {
+            case TRAVELERS_BACKPACK -> "Backpack";
+            case SHULKER_BOX -> "Shulker Box";
+            case BUNDLE -> "Bundle";
+            case UNSUPPORTED -> "Container";
+        };
+    }
+
     private static boolean isTravelersBackpackItem(ItemStack stack) {
         ResourceLocation id = BuiltInRegistries.ITEM.getKey(stack.getItem());
         if(!TRAVELERS_BACKPACK_NAMESPACE.equals(id.getNamespace())) {
@@ -246,5 +291,148 @@ public final class ContainerItemUtil {
             stack.set(DataComponents.BUNDLE_CONTENTS, items.isEmpty() ? BundleContents.EMPTY : new BundleContents(items));
         }
         return extracted;
+    }
+
+    private static boolean isTravelerBackpackStorageFull(ItemStack stack) {
+        IItemHandler handler = getTravelerBackpackStorage(stack);
+        if(handler == null || handler.getSlots() <= 0) {
+            return true;
+        }
+        for(int slot = 0; slot < handler.getSlots(); slot++) {
+            ItemStack stored = handler.getStackInSlot(slot);
+            if(stored.isEmpty()) {
+                return false;
+            }
+            int limit = Math.min(handler.getSlotLimit(slot), stored.getMaxStackSize());
+            if(stored.getCount() < limit) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static float getTravelerBackpackFillProgress(ItemStack stack) {
+        IItemHandler handler = getTravelerBackpackStorage(stack);
+        if(handler == null || handler.getSlots() <= 0) {
+            return 0.0F;
+        }
+        int filledSlots = 0;
+        for(int slot = 0; slot < handler.getSlots(); slot++) {
+            if(!handler.getStackInSlot(slot).isEmpty()) {
+                filledSlots++;
+            }
+        }
+        return filledSlots / (float)handler.getSlots();
+    }
+
+    private static int insertTravelerBackpackContent(ItemStack container, ItemStack input, boolean simulate) {
+        IItemHandler handler = getTravelerBackpackStorage(container);
+        if(handler == null) {
+            return 0;
+        }
+
+        ItemStack remainder = input.copy();
+        for(int slot = 0; slot < handler.getSlots() && !remainder.isEmpty(); slot++) {
+            remainder = handler.insertItem(slot, remainder, simulate);
+        }
+        return input.getCount() - remainder.getCount();
+    }
+
+    private static boolean isShulkerFull(ItemStack stack) {
+        NonNullList<ItemStack> items = getShulkerItems(stack);
+        for(ItemStack stored : items) {
+            if(stored.isEmpty()) {
+                return false;
+            }
+            if(stored.getCount() < stored.getMaxStackSize()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static float getShulkerFillProgress(ItemStack stack) {
+        NonNullList<ItemStack> items = getShulkerItems(stack);
+        int filledSlots = 0;
+        for(ItemStack stored : items) {
+            if(!stored.isEmpty()) {
+                filledSlots++;
+            }
+        }
+        return filledSlots / (float)SHULKER_SLOTS;
+    }
+
+    private static int insertShulkerContent(ItemStack container, ItemStack input, boolean simulate) {
+        if(input.isEmpty()) {
+            return 0;
+        }
+
+        NonNullList<ItemStack> items = getShulkerItems(container);
+        ItemStack remainder = input.copy();
+
+        for(int slot = 0; slot < SHULKER_SLOTS && !remainder.isEmpty(); slot++) {
+            ItemStack stored = items.get(slot);
+            if(stored.isEmpty() || !ItemStack.isSameItemSameComponents(stored, remainder)) {
+                continue;
+            }
+
+            int limit = stored.getMaxStackSize();
+            int toMove = Math.min(remainder.getCount(), limit - stored.getCount());
+            if(toMove <= 0) {
+                continue;
+            }
+
+            if(!simulate) {
+                stored.grow(toMove);
+            }
+            remainder.shrink(toMove);
+        }
+
+        for(int slot = 0; slot < SHULKER_SLOTS && !remainder.isEmpty(); slot++) {
+            ItemStack stored = items.get(slot);
+            if(!stored.isEmpty()) {
+                continue;
+            }
+
+            int toMove = Math.min(remainder.getCount(), remainder.getMaxStackSize());
+            if(toMove <= 0) {
+                continue;
+            }
+
+            if(!simulate) {
+                items.set(slot, remainder.copyWithCount(toMove));
+            }
+            remainder.shrink(toMove);
+        }
+
+        int inserted = input.getCount() - remainder.getCount();
+        if(!simulate && inserted > 0) {
+            container.set(DataComponents.CONTAINER, ItemContainerContents.fromItems(items));
+        }
+        return inserted;
+    }
+
+    private static boolean isBundleFull(ItemStack stack) {
+        BundleContents contents = stack.getOrDefault(DataComponents.BUNDLE_CONTENTS, BundleContents.EMPTY);
+        return contents.weight().floatValue() >= 0.999F;
+    }
+
+    private static float getBundleFillProgress(ItemStack stack) {
+        BundleContents contents = stack.getOrDefault(DataComponents.BUNDLE_CONTENTS, BundleContents.EMPTY);
+        return Math.max(0.0F, Math.min(1.0F, contents.weight().floatValue()));
+    }
+
+    private static int insertBundleContent(ItemStack container, ItemStack input, boolean simulate) {
+        if(input.isEmpty()) {
+            return 0;
+        }
+
+        BundleContents contents = container.getOrDefault(DataComponents.BUNDLE_CONTENTS, BundleContents.EMPTY);
+        BundleContents.Mutable mutable = new BundleContents.Mutable(contents);
+        int inserted = mutable.tryInsert(input.copy());
+        if(!simulate && inserted > 0) {
+            container.set(DataComponents.BUNDLE_CONTENTS, mutable.toImmutable());
+        }
+        return inserted;
     }
 }

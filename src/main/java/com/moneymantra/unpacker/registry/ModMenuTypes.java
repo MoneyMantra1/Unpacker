@@ -1,6 +1,7 @@
 package com.moneymantra.unpacker.registry;
 
 import com.moneymantra.unpacker.Unpacker;
+import com.moneymantra.unpacker.menu.PackerMenu;
 import com.moneymantra.unpacker.menu.UnpackerMenu;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.inventory.MenuType;
@@ -14,5 +15,10 @@ public class ModMenuTypes {
     public static final DeferredHolder<MenuType<?>, MenuType<UnpackerMenu>> UNPACKER_MENU = MENU_TYPES.register(
             "unpacker",
             () -> IMenuTypeExtension.create(UnpackerMenu::new)
+    );
+
+    public static final DeferredHolder<MenuType<?>, MenuType<PackerMenu>> PACKER_MENU = MENU_TYPES.register(
+            "packer",
+            () -> IMenuTypeExtension.create(PackerMenu::new)
     );
 }

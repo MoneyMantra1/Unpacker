@@ -1,6 +1,7 @@
 package com.moneymantra.unpacker.registry;
 
 import com.moneymantra.unpacker.Unpacker;
+import com.moneymantra.unpacker.blockentity.PackerBlockEntity;
 import com.moneymantra.unpacker.blockentity.UnpackerBlockEntity;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.block.entity.BlockEntityType;
@@ -13,5 +14,10 @@ public class ModBlockEntities {
     public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<UnpackerBlockEntity>> UNPACKER = BLOCK_ENTITIES.register(
             "unpacker",
             () -> BlockEntityType.Builder.of(UnpackerBlockEntity::new, ModBlocks.UNPACKER.get()).build(null)
+    );
+
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<PackerBlockEntity>> PACKER = BLOCK_ENTITIES.register(
+            "packer",
+            () -> BlockEntityType.Builder.of(PackerBlockEntity::new, ModBlocks.PACKER.get()).build(null)
     );
 }

@@ -1,6 +1,7 @@
 {
   "replace": false,
   "values": [
-    "unpacker:unpacker"
+    "unpacker:unpacker",
+    "unpacker:packer"
   ]
 }

@@ -1,6 +1,7 @@
 package com.moneymantra.unpacker.registry;
 
 import com.moneymantra.unpacker.Unpacker;
+import com.moneymantra.unpacker.block.PackerBlock;
 import com.moneymantra.unpacker.block.UnpackerBlock;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
@@ -21,5 +22,13 @@ public class ModBlocks {
                     .sound(SoundType.METAL)
     ));
 
+    public static final DeferredBlock<PackerBlock> PACKER = BLOCKS.register("packer", () -> new PackerBlock(
+            BlockBehaviour.Properties.of()
+                    .strength(3.5F, 6.0F)
+                    .requiresCorrectToolForDrops()
+                    .sound(SoundType.METAL)
+    ));
+
     public static final DeferredItem<BlockItem> UNPACKER_ITEM = ITEMS.register("unpacker", () -> new BlockItem(UNPACKER.get(), new Item.Properties()));
+    public static final DeferredItem<BlockItem> PACKER_ITEM = ITEMS.register("packer", () -> new BlockItem(PACKER.get(), new Item.Properties()));
 }

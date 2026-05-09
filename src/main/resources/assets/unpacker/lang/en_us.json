@@ -1,5 +1,8 @@
 {
   "block.unpacker.unpacker": "Unpacker",
   "item.unpacker.unpacker": "Unpacker",
-  "container.unpacker.unpacker": "Unpacker"
+  "container.unpacker.unpacker": "Unpacker",
+  "block.unpacker.packer": "Packer",
+  "item.unpacker.packer": "Packer",
+  "container.unpacker.packer": "Packer"
 }

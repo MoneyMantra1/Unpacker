@@ -1,0 +1,12 @@
+{
+  "parent": "minecraft:block/cube",
+  "textures": {
+    "particle": "unpacker:block/packer_side",
+    "down": "unpacker:block/packer_bottom",
+    "up": "unpacker:block/packer_top",
+    "north": "unpacker:block/packer_front",
+    "south": "unpacker:block/packer_side",
+    "east": "unpacker:block/packer_side",
+    "west": "unpacker:block/packer_side"
+  }
+}

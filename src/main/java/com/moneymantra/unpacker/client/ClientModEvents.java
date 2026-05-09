@@ -12,5 +12,6 @@ public class ClientModEvents {
     @SubscribeEvent
     public static void registerScreens(RegisterMenuScreensEvent event) {
         event.register(ModMenuTypes.UNPACKER_MENU.get(), UnpackerScreen::new);
+        event.register(ModMenuTypes.PACKER_MENU.get(), PackerScreen::new);
     }
 }
