@@ -63,34 +63,34 @@ public class UnpackerMenu extends AbstractContainerMenu {
     }
 
     private void addMachineSlots() {
-        int startX = 8;
+        int startX = 79;
 
         for(int row = 0; row < 2; row++) {
             for(int col = 0; col < 9; col++) {
                 int slot = row * 9 + col;
-                this.addSlot(new SlotItemHandler(blockEntity.getInternalItems(), slot, startX + col * 18, 18 + row * 18));
+                this.addSlot(new SlotItemHandler(blockEntity.getInternalItems(), slot, startX + col * 18, 23 + row * 18));
             }
         }
 
         for(int row = 0; row < 2; row++) {
             for(int col = 0; col < 9; col++) {
                 int slot = UnpackerBlockEntity.OUTPUT_START + row * 9 + col;
-                this.addSlot(new LockedSlotItemHandler(blockEntity.getInternalItems(), slot, startX + col * 18, 92 + row * 18));
+                this.addSlot(new LockedSlotItemHandler(blockEntity.getInternalItems(), slot, startX + col * 18, 120 + row * 18));
             }
         }
     }
 
     private void addPlayerInventorySlots(Inventory playerInventory) {
-        int startX = 8;
+        int startX = 79;
 
         for(int row = 0; row < 3; row++) {
             for(int col = 0; col < 9; col++) {
-                this.addSlot(new Slot(playerInventory, col + row * 9 + 9, startX + col * 18, 148 + row * 18));
+                this.addSlot(new Slot(playerInventory, col + row * 9 + 9, startX + col * 18, 170 + row * 18));
             }
         }
 
         for(int col = 0; col < 9; col++) {
-            this.addSlot(new Slot(playerInventory, col, startX + col * 18, 206));
+            this.addSlot(new Slot(playerInventory, col, startX + col * 18, 228));
         }
     }
 

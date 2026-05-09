@@ -14,96 +14,131 @@ import net.minecraft.world.item.ItemStack;
 public class UnpackerScreen extends AbstractContainerScreen<UnpackerMenu> {
     private static final ResourceLocation TEXTURE = ResourceLocation.fromNamespaceAndPath(Unpacker.MOD_ID, "textures/gui/unpacker.png");
 
-    private static final int PANEL_X = 6;
-    private static final int PANEL_Y = 56;
-    private static final int PANEL_WIDTH = 164;
-    private static final int PANEL_HEIGHT = 33;
+    private static final int TEXTURE_WIDTH = 320;
+    private static final int TEXTURE_HEIGHT = 250;
 
-    private static final int PRIMARY_TEXT_X = PANEL_X + 5;
-    private static final int PRIMARY_TEXT_Y = PANEL_Y + 4;
-    private static final int SECONDARY_TEXT_X = PANEL_X + 5;
-    private static final int SECONDARY_TEXT_Y = PANEL_Y + 14;
-    private static final int TEXT_WIDTH = PANEL_WIDTH - 10;
+    private static final int STATUS_TEXT_X = 116;
+    private static final int STATUS_TEXT_Y = 72;
+    private static final int STATUS_TEXT_WIDTH = 118;
+    private static final int STATUS_PRIMARY_Y = STATUS_TEXT_Y + 10;
+    private static final int STATUS_SECONDARY_Y = STATUS_TEXT_Y + 20;
 
-    private static final int PROGRESS_BAR_X = PANEL_X + 5;
-    private static final int PROGRESS_BAR_Y = PANEL_Y + 25;
-    private static final int PROGRESS_BAR_WIDTH = 132;
-    private static final int PROGRESS_BAR_HEIGHT = 5;
-    private static final int PROGRESS_PERCENT_X = PROGRESS_BAR_X + PROGRESS_BAR_WIDTH + 6;
-    private static final int PROGRESS_PERCENT_Y = PANEL_Y + 22;
+    private static final int PROGRESS_BAR_X = 116;
+    private static final int PROGRESS_BAR_Y = 98;
+    private static final int PROGRESS_BAR_WIDTH = 99;
+    private static final int PROGRESS_BAR_HEIGHT = 6;
+    private static final int PROGRESS_PERCENT_X = PROGRESS_BAR_X + PROGRESS_BAR_WIDTH + 8;
+    private static final int PROGRESS_PERCENT_Y = PROGRESS_BAR_Y - 1;
 
-    private static final int COLOR_PANEL_BORDER_DARK = 0xFF07090C;
-    private static final int COLOR_PANEL_BORDER_LIGHT = 0xFF3C444F;
-    private static final int COLOR_PANEL_BACKGROUND = 0xFF171C23;
-    private static final int COLOR_PRIMARY = 0xFFECEFF4;
-    private static final int COLOR_SECONDARY = 0xFF9AA3AE;
-    private static final int COLOR_MUTED = 0xFF68717D;
-    private static final int COLOR_WARNING = 0xFFE0B15C;
-    private static final int COLOR_BLOCKED = 0xFFFF9B7A;
-    private static final int COLOR_PROGRESS_BACKGROUND = 0xFF252A31;
-    private static final int COLOR_PROGRESS_FILL = 0xFFC98D3A;
-    private static final int COLOR_PROGRESS_HIGHLIGHT = 0xFFE0B15C;
+    private static final int COLOR_TITLE = 0xFFE7E2D4;
+    private static final int COLOR_LABEL = 0xFFD9D2BE;
+    private static final int COLOR_LABEL_DIM = 0xFFB0A996;
+    private static final int COLOR_PANEL_TEXT = 0xFFECEFF4;
+    private static final int COLOR_SECONDARY = 0xFFB6BEC8;
+    private static final int COLOR_MUTED = 0xFF69737F;
+    private static final int COLOR_ORANGE = 0xFFFFA334;
+    private static final int COLOR_ORANGE_DIM = 0xFFC98531;
+    private static final int COLOR_CYAN = 0xFF54DDEB;
+    private static final int COLOR_WARNING = 0xFFFFC36B;
+    private static final int COLOR_BLOCKED = 0xFFFF967A;
+    private static final int COLOR_DARK_EDGE = 0xFF06080B;
+    private static final int COLOR_PROGRESS_BACKGROUND = 0xFF20262D;
+    private static final int COLOR_PROGRESS_GRID = 0xFF0E1217;
+    private static final int COLOR_PROGRESS_FILL = 0xFFD58522;
+    private static final int COLOR_PROGRESS_HIGHLIGHT = 0xFFFFB34E;
+    private static final int COLOR_PROGRESS_SHADOW = 0xFF8B4817;
 
     public UnpackerScreen(UnpackerMenu menu, Inventory playerInventory, Component title) {
         super(menu, playerInventory, title);
-        this.imageWidth = 176;
-        this.imageHeight = 240;
-        this.inventoryLabelY = 136;
+        this.imageWidth = TEXTURE_WIDTH;
+        this.imageHeight = TEXTURE_HEIGHT;
     }
 
     @Override
     protected void renderBg(GuiGraphics guiGraphics, float partialTick, int mouseX, int mouseY) {
-        guiGraphics.blit(TEXTURE, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight);
+        guiGraphics.blit(TEXTURE, this.leftPos, this.topPos, 0, 0, this.imageWidth, this.imageHeight, TEXTURE_WIDTH, TEXTURE_HEIGHT);
     }
 
     @Override
     protected void renderLabels(GuiGraphics guiGraphics, int mouseX, int mouseY) {
-        super.renderLabels(guiGraphics, mouseX, mouseY);
+        renderStaticLabels(guiGraphics);
         renderStatusPanel(guiGraphics);
     }
 
+    private void renderStaticLabels(GuiGraphics guiGraphics) {
+        drawCenteredText(guiGraphics, "UNPACKER", this.imageWidth / 2, 5, COLOR_TITLE);
+
+        drawCenteredText(guiGraphics, "INPUT", 32, 41, COLOR_LABEL);
+        drawCenteredText(guiGraphics, "TOP SIDE", 32, 51, COLOR_LABEL_DIM);
+        drawUpArrow(guiGraphics, 32, 28, COLOR_LABEL);
+
+        drawCenteredText(guiGraphics, "EXTRACT", 32, 112, COLOR_LABEL);
+        drawCenteredText(guiGraphics, "BOTTOM", 32, 122, COLOR_LABEL_DIM);
+        drawCenteredText(guiGraphics, "SIDE", 32, 132, COLOR_LABEL_DIM);
+        drawDownArrow(guiGraphics, 32, 142, COLOR_LABEL);
+
+        drawCenteredText(guiGraphics, "OUTPUT", 287, 73, COLOR_LABEL);
+        drawCenteredText(guiGraphics, "FRONT SIDE", 287, 107, COLOR_LABEL_DIM);
+
+        guiGraphics.drawString(this.font, "INPUT", 79, 12, COLOR_LABEL, false);
+        guiGraphics.drawString(this.font, "OUTPUT", 79, 111, COLOR_LABEL, false);
+        guiGraphics.drawString(this.font, "INVENTORY", 79, 160, COLOR_LABEL, false);
+    }
+
     private void renderStatusPanel(GuiGraphics guiGraphics) {
-        drawPanelBackground(guiGraphics);
+        guiGraphics.drawString(this.font, "STATUS", STATUS_TEXT_X, STATUS_TEXT_Y, getStatusAccentColor(), false);
 
-        String primary = fitText(getPrimaryStatusLine(), TEXT_WIDTH);
-        String secondary = fitText(getSecondaryStatusLine(), TEXT_WIDTH);
+        String primary = fitText(getPrimaryStatusLine(), STATUS_TEXT_WIDTH);
+        String secondary = fitText(getSecondaryStatusLine(), STATUS_TEXT_WIDTH);
 
-        guiGraphics.drawString(this.font, primary, PRIMARY_TEXT_X, PRIMARY_TEXT_Y, getPrimaryStatusColor(), false);
-        guiGraphics.drawString(this.font, secondary, SECONDARY_TEXT_X, SECONDARY_TEXT_Y, getSecondaryStatusColor(), false);
+        guiGraphics.drawString(this.font, primary, STATUS_TEXT_X, STATUS_PRIMARY_Y, getPrimaryStatusColor(), false);
+        guiGraphics.drawString(this.font, secondary, STATUS_TEXT_X, STATUS_SECONDARY_Y, getSecondaryStatusColor(), false);
 
         if(shouldRenderProgressBar()) {
             drawProgressBar(guiGraphics);
+        } else {
+            drawIdleProgressTrack(guiGraphics);
         }
-    }
-
-    private void drawPanelBackground(GuiGraphics guiGraphics) {
-        guiGraphics.fill(PANEL_X, PANEL_Y, PANEL_X + PANEL_WIDTH, PANEL_Y + PANEL_HEIGHT, COLOR_PANEL_BORDER_DARK);
-        guiGraphics.fill(PANEL_X + 1, PANEL_Y + 1, PANEL_X + PANEL_WIDTH - 1, PANEL_Y + PANEL_HEIGHT - 1, COLOR_PANEL_BACKGROUND);
-        guiGraphics.fill(PANEL_X + 1, PANEL_Y + 1, PANEL_X + PANEL_WIDTH - 1, PANEL_Y + 2, COLOR_PANEL_BORDER_LIGHT);
     }
 
     private void drawProgressBar(GuiGraphics guiGraphics) {
         int barRight = PROGRESS_BAR_X + PROGRESS_BAR_WIDTH;
         int barBottom = PROGRESS_BAR_Y + PROGRESS_BAR_HEIGHT;
 
-        guiGraphics.fill(PROGRESS_BAR_X - 1, PROGRESS_BAR_Y - 1, barRight + 1, barBottom + 1, COLOR_PANEL_BORDER_DARK);
+        guiGraphics.fill(PROGRESS_BAR_X - 1, PROGRESS_BAR_Y - 1, barRight + 1, barBottom + 1, COLOR_DARK_EDGE);
         guiGraphics.fill(PROGRESS_BAR_X, PROGRESS_BAR_Y, barRight, barBottom, COLOR_PROGRESS_BACKGROUND);
+
+        for(int x = PROGRESS_BAR_X + 6; x < barRight; x += 7) {
+            guiGraphics.fill(x, PROGRESS_BAR_Y, x + 1, barBottom, COLOR_PROGRESS_GRID);
+        }
 
         int fillWidth = Math.round(PROGRESS_BAR_WIDTH * getProgress());
         if(fillWidth > 0) {
-            guiGraphics.fill(PROGRESS_BAR_X, PROGRESS_BAR_Y, PROGRESS_BAR_X + fillWidth, barBottom, COLOR_PROGRESS_FILL);
-            guiGraphics.fill(PROGRESS_BAR_X, PROGRESS_BAR_Y, PROGRESS_BAR_X + fillWidth, PROGRESS_BAR_Y + 1, COLOR_PROGRESS_HIGHLIGHT);
+            int fillRight = Math.min(barRight, PROGRESS_BAR_X + fillWidth);
+            guiGraphics.fill(PROGRESS_BAR_X, PROGRESS_BAR_Y, fillRight, barBottom, COLOR_PROGRESS_FILL);
+            guiGraphics.fill(PROGRESS_BAR_X, PROGRESS_BAR_Y, fillRight, PROGRESS_BAR_Y + 1, COLOR_PROGRESS_HIGHLIGHT);
+            guiGraphics.fill(PROGRESS_BAR_X, barBottom - 1, fillRight, barBottom, COLOR_PROGRESS_SHADOW);
+
+            for(int x = PROGRESS_BAR_X + 6; x < fillRight; x += 8) {
+                guiGraphics.fill(x, PROGRESS_BAR_Y + 1, x + 1, barBottom - 1, 0x55FFE0A0);
+            }
         }
 
-        String percent = getProgressPercentText();
-        guiGraphics.drawString(this.font, percent, PROGRESS_PERCENT_X, PROGRESS_PERCENT_Y, COLOR_SECONDARY, false);
+        guiGraphics.drawString(this.font, getProgressPercentText(), PROGRESS_PERCENT_X, PROGRESS_PERCENT_Y, COLOR_ORANGE, false);
+    }
+
+    private void drawIdleProgressTrack(GuiGraphics guiGraphics) {
+        int barRight = PROGRESS_BAR_X + PROGRESS_BAR_WIDTH;
+        int barBottom = PROGRESS_BAR_Y + PROGRESS_BAR_HEIGHT;
+        guiGraphics.fill(PROGRESS_BAR_X - 1, PROGRESS_BAR_Y - 1, barRight + 1, barBottom + 1, COLOR_DARK_EDGE);
+        guiGraphics.fill(PROGRESS_BAR_X, PROGRESS_BAR_Y, barRight, barBottom, COLOR_PROGRESS_BACKGROUND);
     }
 
     private String getPrimaryStatusLine() {
         int status = this.menu.getStatus();
         return switch(status) {
             case UnpackerBlockEntity.STATUS_WORKING -> "Unpacking " + getActiveContainerName();
-            case UnpackerBlockEntity.STATUS_WAITING_FOR_HOPPER -> "Waiting for hopper...";
+            case UnpackerBlockEntity.STATUS_WAITING_FOR_HOPPER -> "Waiting for hopper";
             case UnpackerBlockEntity.STATUS_OUTPUT_FULL -> "Output full";
             case UnpackerBlockEntity.STATUS_FRONT_OUTPUT_BLOCKED -> "Front output blocked";
             default -> "Idle";
@@ -117,14 +152,24 @@ public class UnpackerScreen extends AbstractContainerScreen<UnpackerMenu> {
 
         return switch(status) {
             case UnpackerBlockEntity.STATUS_WORKING -> activeSlot >= 0
-                    ? "Slot " + (activeSlot + 1) + "/18 • " + remaining + " left"
+                    ? "Slot " + (activeSlot + 1) + "/18 • " + remaining + " items left"
                     : remaining + " items remaining";
             case UnpackerBlockEntity.STATUS_WAITING_FOR_HOPPER -> activeSlot >= 0
-                    ? "Slot " + (activeSlot + 1) + "/18 • " + remaining + " left"
+                    ? "Slot " + (activeSlot + 1) + "/18 • hopper blocked"
                     : "Check bottom hopper/chest";
-            case UnpackerBlockEntity.STATUS_OUTPUT_FULL -> "Remove empty containers";
-            case UnpackerBlockEntity.STATUS_FRONT_OUTPUT_BLOCKED -> "Clear the front inventory";
-            default -> "Insert containers to unpack";
+            case UnpackerBlockEntity.STATUS_OUTPUT_FULL -> "Clear bottom output space";
+            case UnpackerBlockEntity.STATUS_FRONT_OUTPUT_BLOCKED -> "Clear empty-container output";
+            default -> "Insert containers from top";
+        };
+    }
+
+    private int getStatusAccentColor() {
+        int status = this.menu.getStatus();
+        return switch(status) {
+            case UnpackerBlockEntity.STATUS_WORKING -> COLOR_ORANGE;
+            case UnpackerBlockEntity.STATUS_WAITING_FOR_HOPPER -> COLOR_WARNING;
+            case UnpackerBlockEntity.STATUS_OUTPUT_FULL, UnpackerBlockEntity.STATUS_FRONT_OUTPUT_BLOCKED -> COLOR_BLOCKED;
+            default -> COLOR_CYAN;
         };
     }
 
@@ -134,7 +179,7 @@ public class UnpackerScreen extends AbstractContainerScreen<UnpackerMenu> {
             case UnpackerBlockEntity.STATUS_WAITING_FOR_HOPPER -> COLOR_WARNING;
             case UnpackerBlockEntity.STATUS_OUTPUT_FULL, UnpackerBlockEntity.STATUS_FRONT_OUTPUT_BLOCKED -> COLOR_BLOCKED;
             case UnpackerBlockEntity.STATUS_IDLE -> COLOR_MUTED;
-            default -> COLOR_PRIMARY;
+            default -> COLOR_PANEL_TEXT;
         };
     }
 
@@ -178,6 +223,26 @@ public class UnpackerScreen extends AbstractContainerScreen<UnpackerMenu> {
 
         float progress = 1.0F - (remaining / (float)starting);
         return Math.max(0.0F, Math.min(1.0F, progress));
+    }
+
+    private void drawCenteredText(GuiGraphics guiGraphics, String text, int centerX, int y, int color) {
+        guiGraphics.drawString(this.font, text, centerX - this.font.width(text) / 2, y, color, false);
+    }
+
+    private void drawUpArrow(GuiGraphics guiGraphics, int centerX, int y, int color) {
+        guiGraphics.fill(centerX - 1, y + 2, centerX + 2, y + 10, color);
+        guiGraphics.fill(centerX - 4, y + 5, centerX + 5, y + 8, color);
+        guiGraphics.fill(centerX - 3, y + 4, centerX + 4, y + 5, color);
+        guiGraphics.fill(centerX - 2, y + 3, centerX + 3, y + 4, color);
+        guiGraphics.fill(centerX - 1, y + 2, centerX + 2, y + 3, color);
+    }
+
+    private void drawDownArrow(GuiGraphics guiGraphics, int centerX, int y, int color) {
+        guiGraphics.fill(centerX - 1, y, centerX + 2, y + 8, color);
+        guiGraphics.fill(centerX - 4, y + 4, centerX + 5, y + 7, color);
+        guiGraphics.fill(centerX - 3, y + 7, centerX + 4, y + 8, color);
+        guiGraphics.fill(centerX - 2, y + 8, centerX + 3, y + 9, color);
+        guiGraphics.fill(centerX - 1, y + 9, centerX + 2, y + 10, color);
     }
 
     private String fitText(String text, int maxWidth) {
