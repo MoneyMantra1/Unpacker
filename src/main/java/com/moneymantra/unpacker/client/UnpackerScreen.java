@@ -15,19 +15,14 @@ public class UnpackerScreen extends AbstractContainerScreen<UnpackerMenu> {
     private static final int TEXTURE_WIDTH = 220;
     private static final int TEXTURE_HEIGHT = 248;
 
-    private static final int PROGRESS_BAR_X = 34;
-    private static final int PROGRESS_BAR_Y = 78;
-    private static final int PROGRESS_BAR_WIDTH = 146;
-    private static final int PROGRESS_BAR_HEIGHT = 9;
-    private static final int PROGRESS_PERCENT_X = 184;
-    private static final int PROGRESS_PERCENT_Y = 79;
+    private static final int PROGRESS_BAR_X = 30;
+    private static final int PROGRESS_BAR_Y = 79;
+    private static final int PROGRESS_BAR_WIDTH = 160;
+    private static final int PROGRESS_BAR_HEIGHT = 8;
 
-    private static final int COLOR_ORANGE = 0xFFD78828;
-    private static final int COLOR_WARNING = 0xFFE4B55D;
-    private static final int COLOR_BLOCKED = 0xFFE08667;
-    private static final int COLOR_PROGRESS_BORDER = 0xFF1E232A;
-    private static final int COLOR_PROGRESS_BACKGROUND = 0xFF2E3844;
-    private static final int COLOR_PROGRESS_GRID = 0xFF435060;
+    private static final int COLOR_PROGRESS_BORDER = 0xFF383838;
+    private static final int COLOR_PROGRESS_BACKGROUND = 0xFF445568;
+    private static final int COLOR_PROGRESS_GRID = 0xFF5D6E82;
     private static final int COLOR_PROGRESS_FILL = 0xFFD58522;
     private static final int COLOR_PROGRESS_HIGHLIGHT = 0xFFF1B458;
     private static final int COLOR_PROGRESS_SHADOW = 0xFF99501A;
@@ -71,17 +66,7 @@ public class UnpackerScreen extends AbstractContainerScreen<UnpackerMenu> {
                 guiGraphics.fill(PROGRESS_BAR_X, PROGRESS_BAR_Y, fillRight, PROGRESS_BAR_Y + 1, COLOR_PROGRESS_HIGHLIGHT);
                 guiGraphics.fill(PROGRESS_BAR_X, barBottom - 1, fillRight, barBottom, COLOR_PROGRESS_SHADOW);
             }
-            guiGraphics.drawString(this.font, getProgressPercentText(), PROGRESS_PERCENT_X, PROGRESS_PERCENT_Y, getProgressTextColor(), false);
         }
-    }
-
-    private int getProgressTextColor() {
-        int status = this.menu.getStatus();
-        return switch(status) {
-            case UnpackerBlockEntity.STATUS_WAITING_FOR_HOPPER -> COLOR_WARNING;
-            case UnpackerBlockEntity.STATUS_OUTPUT_FULL, UnpackerBlockEntity.STATUS_FRONT_OUTPUT_BLOCKED -> COLOR_BLOCKED;
-            default -> COLOR_ORANGE;
-        };
     }
 
     private boolean shouldRenderProgressBar() {
@@ -89,10 +74,6 @@ public class UnpackerScreen extends AbstractContainerScreen<UnpackerMenu> {
         return status == UnpackerBlockEntity.STATUS_WORKING
                 || status == UnpackerBlockEntity.STATUS_WAITING_FOR_HOPPER
                 || status == UnpackerBlockEntity.STATUS_OUTPUT_FULL;
-    }
-
-    private String getProgressPercentText() {
-        return Math.round(getProgress() * 100.0F) + "%";
     }
 
     private float getProgress() {
