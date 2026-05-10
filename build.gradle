@@ -8,10 +8,17 @@ version = mod_version
 group = mod_group_id
 
 base {
-    archivesName = mod_id
+    archivesName = "Packworks"
 }
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+
+
+tasks.named('jar').configure {
+    archiveBaseName.set('Packworks')
+    archiveVersion.set("${mod_version}-NeoForge-${minecraft_version}")
+}
+
 
 neoForge {
     version = project.neo_version

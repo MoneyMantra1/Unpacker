@@ -4,10 +4,10 @@ license = "All Rights Reserved"
 
 [[mods]]
 modId = "unpacker"
-version = "1.1.0"
-displayName = "Unpacker"
+version = "1.0.0"
+displayName = "Packworks"
 authors = "MoneyMantra"
-description = '''Adds Unpacker and Packer blocks for side-specific automation with Traveler's Backpacks, shulker boxes, and bundles.'''
+description = '''Adds Unpacker and Packer blocks for side-specific automation with shulker boxes, bundles, and optional Traveler's Backpack support.'''
 
 [[dependencies.unpacker]]
 modId = "neoforge"
@@ -25,7 +25,7 @@ side = "BOTH"
 
 [[dependencies.unpacker]]
 modId = "travelersbackpack"
-type = "required"
+type = "optional"
 versionRange = "[0,)"
 ordering = "AFTER"
 side = "BOTH"

@@ -1,49 +1,48 @@
-# Unpacker
+# Packworks
 
-NeoForge 1.21.1 / Java 21 mod that adds an **Unpacker** block.
+NeoForge 1.21.1 / Java 21 mod that adds two sibling container-automation blocks:
 
-## What it does
+- **Unpacker** — unloads supported containers into item-output slots and separates the emptied container.
+- **Packer** — packs loose items into supported containers and outputs the filled container.
 
-The Unpacker unloads supported container items into a hopper below and separates the emptied container item to the front output side.
+## Supported containers
 
-Supported direct input containers:
+Packworks works by itself with vanilla containers:
 
-- Traveler's Backpack items from `travelersbackpack`
 - Vanilla shulker boxes
 - Vanilla bundles
 
-Nested containers are **not** recursively unpacked. A shulker/backpack/bundle stored inside another supported container is extracted as a normal item.
+Optional integration:
 
-## Machine layout
+- Traveler's Backpack items from `travelersbackpack`, when Traveler's Backpack is installed
 
-```text
-Input container / hopper / pipe
-             ↓
-        [ Unpacker ] → chest/barrel in front receives emptied containers
-             ↓
-           Hopper
-             ↓
-   chest below receives unloaded contents
-```
+Traveler's Backpack is **not required** to use Packworks. If it is not installed, Packworks still works with shulker boxes and bundles.
 
-## Side behavior
+Nested containers are **not** recursively packed or unpacked. A shulker/backpack/bundle stored inside another supported container is handled as a normal item.
 
-- Top side: insertion only; accepts supported containers only.
-- Bottom side: extraction only; exposes only the contents inside the current input container.
-- Front side: extraction only; emptied containers are pushed into an inventory in front once every 8 ticks.
-- Other sides: no automation.
-
-## Traveler's Backpack behavior
-
-The mod uses the Traveler's Backpack item-handler capability exposed by Traveler's Backpack. It unloads normal backpack storage only and does not touch fluid tanks, upgrade slots, or tool slots.
-
-## Recipe
+## Unpacker automation
 
 ```text
-Iron Ingot | Hopper | Iron Ingot
-Chest      | Barrel | Chest
-Iron Ingot | Comparator | Iron Ingot
+Top side:    full / partially-full container input
+Front side:  empty container output
+Bottom side: extracted item output
 ```
+
+## Packer automation
+
+```text
+Top side:    loose item input
+Front side:  supported container input
+Bottom side: packed container output
+```
+
+## Recipes
+
+Both blocks use iron ingots, a hopper, chests, and a barrel.
+
+The Unpacker uses a comparator in the bottom-middle recipe slot.
+
+The Packer uses redstone in the bottom-middle recipe slot.
 
 ## Build
 
@@ -53,4 +52,8 @@ Use Java 21.
 ./gradlew build
 ```
 
-The jar will be in `build/libs/`.
+The jar will be in `build/libs/` and is configured to build as:
+
+```text
+Packworks-1.0.0-NeoForge-1.21.1.jar
+```
